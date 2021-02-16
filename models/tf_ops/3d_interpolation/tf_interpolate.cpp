@@ -3,10 +3,10 @@
 #include <cstring> // memset
 #include <cstdlib> // rand, RAND_MAX
 #include <cmath> // sqrtf
-#include "tensorflow/core/framework/op.h"
-#include "tensorflow/core/framework/op_kernel.h"
-#include "tensorflow/core/framework/shape_inference.h"
-#include "tensorflow/core/framework/common_shape_fns.h"
+#include "D:/LIBS/tensorflow-2.1.0/include/tensorflow/core/framework/op.h"
+#include "D:/LIBS/tensorflow-2.1.0/include/tensorflow/core/framework/op_kernel.h"
+#include "D:/LIBS/tensorflow-2.1.0/include/tensorflow/core/framework/shape_inference.h"
+#include "D:/LIBS/tensorflow-2.1.0/include/tensorflow/core/framework/common_shape_fns.h"
 using namespace tensorflow;
 
 REGISTER_OP("ThreeNN")

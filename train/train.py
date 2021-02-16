@@ -1,8 +1,8 @@
-''' Training Frustum PointNets.
+""" Training Frustum PointNets.
 
 Author: Charles R. Qi
 Date: September 2017
-'''
+"""
 from __future__ import print_function
 
 import os
@@ -46,14 +46,15 @@ MOMENTUM = FLAGS.momentum
 OPTIMIZER = FLAGS.optimizer
 DECAY_STEP = FLAGS.decay_step
 DECAY_RATE = FLAGS.decay_rate
-NUM_CHANNEL = 3 if FLAGS.no_intensity else 4 # point feature channel
-NUM_CLASSES = 2 # segmentation has two classes
+NUM_CHANNEL = 3 if FLAGS.no_intensity else 4  # point feature channel
+NUM_CLASSES = 2  # segmentation has two classes
 
-MODEL = importlib.import_module(FLAGS.model) # import network module
+MODEL = importlib.import_module(FLAGS.model)  # import network module
 MODEL_FILE = os.path.join(ROOT_DIR, 'models', FLAGS.model+'.py')
 LOG_DIR = FLAGS.log_dir
-if not os.path.exists(LOG_DIR): os.mkdir(LOG_DIR)
-os.system('cp %s %s' % (MODEL_FILE, LOG_DIR)) # bkp of model def
+if not os.path.exists(LOG_DIR):
+    os.mkdir(LOG_DIR)
+os.system('cp %s %s' % (MODEL_FILE, LOG_DIR))  # bkp of model def
 os.system('cp %s %s' % (os.path.join(BASE_DIR, 'train.py'), LOG_DIR))
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
@@ -64,15 +65,16 @@ BN_DECAY_DECAY_STEP = float(DECAY_STEP)
 BN_DECAY_CLIP = 0.99
 
 # Load Frustum Datasets. Use default data paths.
-TRAIN_DATASET = provider.FrustumDataset(npoints=NUM_POINT, split='train',
-    rotate_to_center=True, random_flip=True, random_shift=True, one_hot=True)
-TEST_DATASET = provider.FrustumDataset(npoints=NUM_POINT, split='val',
-    rotate_to_center=True, one_hot=True)
+TRAIN_DATASET = provider.FrustumDataset(npoints=NUM_POINT, split='train', rotate_to_center=True, random_flip=True,
+                                        random_shift=True, one_hot=True)
+TEST_DATASET = provider.FrustumDataset(npoints=NUM_POINT, split='val', rotate_to_center=True, one_hot=True)
+
 
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
     LOG_FOUT.flush()
     print(out_str)
+
 
 def get_learning_rate(batch):
     learning_rate = tf.train.exponential_decay(
@@ -84,6 +86,7 @@ def get_learning_rate(batch):
     learing_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
     return learning_rate        
 
+
 def get_bn_decay(batch):
     bn_momentum = tf.train.exponential_decay(
                       BN_INIT_DECAY,
@@ -94,22 +97,20 @@ def get_bn_decay(batch):
     bn_decay = tf.minimum(BN_DECAY_CLIP, 1 - bn_momentum)
     return bn_decay
 
+
 def train():
-    ''' Main function for training and simple evaluation. '''
+    """ Main function for training and simple evaluation. """
     with tf.Graph().as_default():
         with tf.device('/gpu:'+str(GPU_INDEX)):
-            pointclouds_pl, one_hot_vec_pl, labels_pl, centers_pl, \
-            heading_class_label_pl, heading_residual_label_pl, \
-            size_class_label_pl, size_residual_label_pl = \
-                MODEL.placeholder_inputs(BATCH_SIZE, NUM_POINT)
+            pointclouds_pl, one_hot_vec_pl, labels_pl, centers_pl, heading_class_label_pl, heading_residual_label_pl,\
+            size_class_label_pl, size_residual_label_pl = MODEL.placeholder_inputs(BATCH_SIZE, NUM_POINT)
 
             is_training_pl = tf.placeholder(tf.bool, shape=())
             
             # Note the global_step=batch parameter to minimize. 
             # That tells the optimizer to increment the 'batch' parameter
             # for you every time it trains.
-            batch = tf.get_variable('batch', [],
-                initializer=tf.constant_initializer(0), trainable=False)
+            batch = tf.get_variable('batch', [], initializer=tf.constant_initializer(0), trainable=False)
             bn_decay = get_bn_decay(batch)
             tf.summary.scalar('bn_decay', bn_decay)
 
@@ -126,14 +127,13 @@ def train():
             tf.summary.scalar('total_loss', total_loss)
 
             # Write summaries of bounding box IoU and segmentation accuracies
-            iou2ds, iou3ds = tf.py_func(provider.compute_box3d_iou, [\
-                end_points['center'], \
-                end_points['heading_scores'], end_points['heading_residuals'], \
-                end_points['size_scores'], end_points['size_residuals'], \
-                centers_pl, \
-                heading_class_label_pl, heading_residual_label_pl, \
-                size_class_label_pl, size_residual_label_pl], \
-                [tf.float32, tf.float32])
+            iou2ds, iou3ds = tf.py_func(provider.compute_box3d_iou, [end_points['center'],end_points['heading_scores'],
+                                                                     end_points['heading_residuals'],
+                                                                     end_points['size_scores'],
+                                                                     end_points['size_residuals'], centers_pl,
+                                                                     heading_class_label_pl, heading_residual_label_pl,
+                                                                     size_class_label_pl, size_residual_label_pl],
+                                        [tf.float32, tf.float32])
             end_points['iou2ds'] = iou2ds 
             end_points['iou3ds'] = iou3ds 
             tf.summary.scalar('iou_2d', tf.reduce_mean(iou2ds))
@@ -141,8 +141,7 @@ def train():
 
             correct = tf.equal(tf.argmax(end_points['mask_logits'], 2),
                 tf.to_int64(labels_pl))
-            accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / \
-                float(BATCH_SIZE*NUM_POINT)
+            accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE*NUM_POINT)
             tf.summary.scalar('segmentation accuracy', accuracy)
 
             # Get training operator
@@ -207,16 +206,16 @@ def train():
                 log_string("Model saved in file: %s" % save_path)
 
 def train_one_epoch(sess, ops, train_writer):
-    ''' Training for one epoch on the frustum dataset.
+    """ Training for one epoch on the frustum dataset.
     ops is dict mapping from string to tf ops
-    '''
+    """
     is_training = True
     log_string(str(datetime.now()))
     
     # Shuffle train samples
     train_idxs = np.arange(0, len(TRAIN_DATASET))
     np.random.shuffle(train_idxs)
-    num_batches = len(TRAIN_DATASET)/BATCH_SIZE
+    num_batches = int(len(TRAIN_DATASET)/BATCH_SIZE)
 
     # To collect statistics
     total_correct = 0
@@ -284,13 +283,13 @@ def train_one_epoch(sess, ops, train_writer):
         
         
 def eval_one_epoch(sess, ops, test_writer):
-    ''' Simple evaluation for one epoch on the frustum dataset.
-    ops is dict mapping from string to tf ops """
-    '''
+    """ Simple evaluation for one epoch on the frustum dataset.
+    ops is dict mapping from string to tf ops
+    """
     global EPOCH_CNT
     is_training = False
     log_string(str(datetime.now()))
-    log_string('---- EPOCH %03d EVALUATION ----'%(EPOCH_CNT))
+    log_string('---- EPOCH %03d EVALUATION ----' % EPOCH_CNT)
     test_idxs = np.arange(0, len(TEST_DATASET))
     num_batches = len(TEST_DATASET)/BATCH_SIZE
 
@@ -305,7 +304,7 @@ def eval_one_epoch(sess, ops, test_writer):
     iou3d_correct_cnt = 0
    
     # Simple evaluation with batches 
-    for batch_idx in range(num_batches):
+    for batch_idx in range(int(num_batches)):
         start_idx = batch_idx * BATCH_SIZE
         end_idx = (batch_idx+1) * BATCH_SIZE
 

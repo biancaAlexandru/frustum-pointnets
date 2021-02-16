@@ -12,6 +12,7 @@ import cv2
 from PIL import Image
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
+# ROOT_DIR = 'D:/AI/KITTI'
 sys.path.append(os.path.join(ROOT_DIR, 'mayavi'))
 import kitti_util as utils
 
@@ -53,17 +54,17 @@ class kitti_object(object):
 
     def get_lidar(self, idx): 
         assert(idx<self.num_samples) 
-        lidar_filename = os.path.join(self.lidar_dir, '%06d.bin'%(idx))
+        lidar_filename = os.path.join(self.lidar_dir, '%06d.bin' % idx)
         return utils.load_velo_scan(lidar_filename)
 
     def get_calibration(self, idx):
-        assert(idx<self.num_samples) 
-        calib_filename = os.path.join(self.calib_dir, '%06d.txt'%(idx))
+        assert(idx < self.num_samples)
+        calib_filename = os.path.join(self.calib_dir, '%06d.txt' % idx)
         return utils.Calibration(calib_filename)
 
     def get_label_objects(self, idx):
-        assert(idx<self.num_samples and self.split=='training') 
-        label_filename = os.path.join(self.label_dir, '%06d.txt'%(idx))
+        assert(idx<self.num_samples and self.split == 'training')
+        label_filename = os.path.join(self.label_dir, '%06d.txt' % idx)
         return utils.read_label(label_filename)
         
     def get_depth_map(self, idx):
